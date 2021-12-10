@@ -47,7 +47,7 @@ numToCells n
     | otherwise = []
 
 _cellsToNum :: [Cell] -> Int -> Int
-_cellsToNum _ 8 = 8
+_cellsToNum cells 9 = 9
 _cellsToNum cells i
     | sameElements cells numCells = i 
     | otherwise = _cellsToNum cells (i + 1)
@@ -81,19 +81,32 @@ allMappings = possibleMappings "abcdefg"
 makesSense :: String -> Mapping -> Bool
 makesSense signal cells
     | length signal == 7 = True -- If all cells are used, any mapping works
-    | otherwise = any (isSubset cells) (possibleMappings signal)
-    where
-        l = length signal
+    | otherwise = any (`isSubset` cells) pms
+    where pms = possibleMappings signal
 
 updatePoss :: String -> [Mapping] -> [Mapping]
 updatePoss signal = filter (makesSense signal)
 
 _findMapping :: [String] -> [Mapping] -> Mapping
+_findMapping _ [pm] = pm
 _findMapping [] pms = head pms
-_findMapping (s:signals) pms = _findMapping signals (updatePoss s pms)
+_findMapping (s:signals) pms = 
+    let
+        poss = (updatePoss s pms)
+    in        
+        _findMapping signals poss
+
+lengthCmp :: String -> String -> Ordering
+lengthCmp a b
+    | la > lb = GT
+    | la < lb = LT
+    | otherwise = EQ
+    where
+        la = length a
+        lb = length b
 
 findMapping :: [String] -> Mapping
-findMapping signals = _findMapping signals allMappings
+findMapping signals = _findMapping (sortBy lengthCmp signals) allMappings
 
 getCell :: Mapping -> Char -> Cell
 getCell mapping c =
