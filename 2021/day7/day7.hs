@@ -17,16 +17,31 @@ median nums
         l = length nums
         m = div l 2
 
-cost :: [Int] -> Int -> Int
-cost crabs goal = sum $ map (\c -> abs $ goal - c) crabs
+solve :: [Int] -> ([Int] -> Int -> Int) -> Int
+solve crabs cost =
+    let
+        (i, a) = minMax crabs
+        poss = [i..a]
+    in
+        minimum $ map (cost crabs) poss
 
-part1 :: [Int] -> Int
-part1 crabs =
-    let goal = median crabs in cost crabs goal
+cost1 :: [Int] -> Int -> Int
+cost1 crabs goal = sum $ map (\c -> abs $ goal - c) crabs
+
+minMax :: [Int] -> (Int, Int)
+minMax crabs = (minimum crabs, maximum crabs)
+
+sumNaturals :: Int -> Int
+sumNaturals n = 
+    let f = fromIntegral n in round $ (f / 2) * (f + 1)
+
+cost2 :: [Int] -> Int -> Int
+cost2 crabs goal = sum $ map (\c -> sumNaturals $ abs $ goal - c) crabs
 
 main :: IO ()
 main = do
     input <- getContents
     let crabs = map (\n -> read n :: Int) $ words $ replaceCommas input
-    putStrLn $ "Part 1: " ++ show (part1 crabs)
-    putStrLn $ "Part 2: " ++ show 0
+    putStrLn $ "Part 1: " ++ show (solve crabs cost1)
+    putStrLn $ "Part 2: " ++ show (solve crabs cost2)
+
