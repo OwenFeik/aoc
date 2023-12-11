@@ -28,22 +28,45 @@
 
 (defun identify-hand (hand)
     (let ((counts (count-cards hand))) (cond
-        ((= (first counts) 5) FIVE_OF)
-        ((= (max (first counts) (second counts)) 4) FOUR_OF)
+        ((and (first counts) (= (first counts) 5)) FIVE_OF)
+        ((or (equal (first counts) 4) (equal (second counts) 4)) FOUR_OF)
         ((or (equal '(2 3) counts) (equal '(3 2) counts)) FULL_HOUSE)
         ((find 3 counts) THREE_OF)
         ((equal '(2 2) (remove-if (lambda (c) (/= c 2)) counts)) TWO_PAIR)
         ((find 2 counts) ONE_PAIR)
         (t HIGH_CARD))))
 
+(defun improve-hand (score)
+    (cond
+        ((= score HIGH_CARD) ONE_PAIR)
+        ((= score ONE_PAIR) THREE_OF)
+        ((= score TWO_PAIR) FULL_HOUSE)
+        ((= score THREE_OF) FOUR_OF)
+        ((= score FULL_HOUSE) FOUR_OF)
+        ((= score FOUR_OF) FIVE_OF)
+        ((= score FIVE_OF) FIVE_OF)))
+
+(defun handle-jokers (hand score)
+    (let ((c (uiop:first-char hand))) (cond
+        ((not c) score)
+        ((char= c #\J) (handle-jokers (subseq hand 1) (improve-hand score)))
+        (t (handle-jokers (subseq hand 1) score)))))
+
+(defun identify-hand-jokers (hand)
+    (handle-jokers hand (identify-hand (uiop:frob-substrings hand '("J")))))
+
+(defun card-value-common (card))
+
 (defun card-value (card) (cond
     ((char= card #\A) 14)
     ((char= card #\K) 13)
     ((char= card #\Q) 12)
-    ;; ((char= card #\J) 11) part one
+    ((char= card #\J) 11)
     ((char= card #\T) 10)
-    ((char= card #\J) 1)
     (t (digit-char-p card))))
+
+(defun card-value-jokers (card)
+    (if (char= card #\J) 1 (card-value card)))
 
 (defun cmp-cards (a b) (< (card-value a) (card-value b)))
 
@@ -71,4 +94,28 @@
         (apply '+ (loop for rank from 1 to (length pairs) collect
             (* rank (parse-integer (second (nth (- rank 1) pairs))))))))
 
-(print (part-one))
+(defun cmp-hand-by-card-jokers (a b)
+    (let (
+        (cv-a (card-value-jokers (uiop:first-char a)))
+        (cv-b (card-value-jokers (uiop:first-char b))))
+        (if (= cv-a cv-b)
+            (cmp-hand-by-card-jokers (subseq a 1) (subseq b 1))
+            (< cv-a cv-b))))
+
+(defun cmp-hands-jokers (a b)
+    (if (string= a b) nil (let (
+        (type-a (identify-hand-jokers a))
+        (type-b (identify-hand-jokers b)))
+        (if (= type-a type-b)
+            (cmp-hand-by-card-jokers a b)
+            (< type-a type-b)))))
+
+(defun cmp-hand-bet-pairs-jokers (a b)
+    (cmp-hands-jokers (first a) (first b)))
+
+(defun part-two ()
+    (let ((pairs (sort data 'cmp-hand-bet-pairs-jokers)))
+        (apply '+ (loop for rank from 1 to (length pairs) collect
+            (* rank (parse-integer (second (nth (- rank 1) pairs))))))))
+
+(print (part-two))
