@@ -1,6 +1,6 @@
 (require 'asdf)
 
-(defparameter pipe-map (uiop:read-file-lines "example.txt"))
+(defparameter pipe-map (uiop:read-file-lines "data.txt"))
 
 (defun off-grid (point) (let ((x (first point)) (y (second point))) (or
     (< x 0)
@@ -35,7 +35,29 @@
             (lambda (adj) (member point (connected-tiles adj) :test 'equal))
             (adj-tiles point)))))))
 
-; breadth first search from start tile, returning maximum distance reached
-(defun part-one () ())
+(defun start-tile ()
+    (let ((point nil))
+        (loop for y from 0 to (- (length pipe-map) 1) do
+            (loop for x from 0 to (- (length (first pipe-map)) 1) do
+                (if (char= (char (nth y pipe-map) x) #\S)
+                    (setq point (list x y)))))
+        point))
 
-(print (connected-tiles '(0 2)))
+(defun part-one () (let (
+    (visited nil)
+    (next-frontier (list (cons 0 (start-tile))))
+    (max-dist 0))
+    (loop while next-frontier do (let ((frontier next-frontier))
+        (setq next-frontier nil)
+        (loop for tile in frontier do
+            (let ((dist (first tile)) (point (rest tile)))
+                (push point visited)
+                (setq next-frontier (append (mapcar
+                    (lambda (point) (cons (+ dist 1) point))
+                    (remove-if
+                        (lambda (point) (member point visited :test 'equal))
+                        (connected-tiles point))) next-frontier))
+                (setq max-dist (max max-dist dist))))))
+    max-dist))
+
+(print (part-one))
