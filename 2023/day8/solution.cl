@@ -27,23 +27,17 @@
 
 (defun traverse-to (steps pos one-z)
     (if (or (and one-z (char= (char pos 2) #\Z)) (string= pos "ZZZ"))
-        steps
+        (values steps pos)
         (traverse-to (+ steps 1) (take-step (mod steps n) pos) one-z)))
 
 (defun part-one () (traverse-to 0 "AAA" nil))
 
-(defun step-ghost (ghost) (list
-    (+ (first ghost) 1)
-    (take-step (mod (first ghost) n) (second ghost))))
+(defun ghosts ()
+    (loop for key being the hash-keys of left
+        when (char= (char key 2) #\A) collect (list 0 key)))
 
-(defun finished (ghosts)
-    (every (lambda (ghost) (char= (char (second ghost) 2) #\Z)) ghosts))
+(defun period (ghost) (traverse-to (first ghost) (second ghost) t))
 
-;; need to determine the period of each ghost, find lowest common multiple
-(defun part-two ()
-    (let ((ghosts (loop for key being the hash-keys of left
-        when (char= (char key 2) #\A) collect (list 0 key 0)))) ; i pos steps
-        (loop until (finished ghosts) do (setq ghosts (mapcar 'step-ghost ghosts)))
-        (first (first ghosts))))
+(defun part-two () (apply 'lcm (mapcar 'period (ghosts)))) 
 
 (print (part-two))
