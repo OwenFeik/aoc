@@ -34,4 +34,28 @@
             (unless (equal a b) (setq sum (+ sum (taxicab-distance a b))))))
     (/ sum 2)))
 
-(print (part-one))
+(defun find-blank-rows (lines) (let ((blanks nil))
+    (loop for i from 0 to (- (length lines) 1) do
+        (unless (position #\# (nth i lines)) (push i blanks)))
+    blanks))
+
+(defparameter blank-rows (find-blank-rows data))
+(defparameter blank-cols (find-blank-rows (rotate data)))
+(defparameter blank-expansion 999999)
+
+(defun adapt-coord (point)
+    (let* ((x (first point)) (y (second point)) (cx x) (cy y))
+        (loop for i in blank-cols do
+            (if (< i x) (setq cx (+ cx blank-expansion))))
+        (loop for i in blank-rows do
+            (if (< i y) (setq cy (+ cy blank-expansion))))
+        (list cx cy)))
+
+(defun part-two ()
+    (let ((stars (mapcar 'adapt-coord (find-stars data))) (sum 0))
+        (loop for a in stars do
+            (loop for b in stars do
+                (setq sum (+ sum (taxicab-distance a b)))))
+        (/ sum 2)))
+
+(print (part-two))
