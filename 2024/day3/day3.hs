@@ -12,20 +12,15 @@ readNum text = case takeWhile isDigit text of
     digits -> Just (drop (length digits) text, read digits)
 
 readPair :: String -> Maybe (String, Int, Int)
-readPair text = case readNum text of
-    Just (rest, firstNum) -> case rest of
-        (',':rest) -> case readNum rest of
-            Just (rest, secondNum) -> Just (rest, firstNum, secondNum)
-            Nothing -> Nothing
-        _ -> Nothing
-    Nothing -> Nothing
+readPair text = readNum text >>= \(rest, a) -> case rest of
+    (',':rest) -> readNum rest >>= \(rest, b) -> Just (rest, a, b)
+    _ -> Nothing
 
 readMul :: String -> Maybe (String, Int, Int)
-readMul ('m':'u':'l':'(':rest) = case readPair rest of
-    Just (rest, firstNum, secondNum) -> case rest of
-        (')':rest) -> Just (rest, firstNum, secondNum)
+readMul ('m':'u':'l':'(':rest) = readPair rest >>= \(rest, a, b) ->
+    case rest of
+        (')':rest) -> Just (rest, a, b)
         _ -> Nothing
-    Nothing -> Nothing
 readMul _ = Nothing
 
 parse1 :: [(Int, Int)] -> String -> [(Int, Int)]
@@ -46,10 +41,10 @@ parse2 acc True text = case text of
             (')':rest) -> parse2 ((a, b):acc) True rest
             _ -> parse2 acc True rest
         Nothing -> parse2 acc True rest
-    _ -> parse2 acc True (drop 1 text) 
+    (_:rest) -> parse2 acc True rest
 parse2 acc False text = case text of
     ('d':'o':'(':')':rest) -> parse2 acc True rest
-    _ -> parse2 acc False (drop 1 text)
+    (_:rest) -> parse2 acc False rest
 
 part2 :: String -> IO ()
 part2 input = print $ sum $ map (uncurry (*)) $ parse2 [] True input
