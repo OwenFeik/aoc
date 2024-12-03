@@ -1,5 +1,4 @@
 import System.IO
-import Debug.Trace
 
 readFileLines :: String -> IO [String]
 readFileLines fp = do
@@ -7,11 +6,8 @@ readFileLines fp = do
     text <- hGetContents handle
     return (lines text)
 
-
 parse :: [String] -> [[Int]]
 parse = map (map read . words)
-
-
 
 pairSafe :: Int -> Int -> Bool
 pairSafe a b = let delta = b - a in delta >= 1 && delta <= 3
