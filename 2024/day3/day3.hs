@@ -12,16 +12,16 @@ readNum text = case takeWhile isDigit text of
     digits -> Just (drop (length digits) text, read digits)
 
 readPair :: String -> Maybe (String, Int, Int)
-readPair text = readNum text >>= \(rest, a) -> case rest of
-    (',':rest) -> readNum rest >>= \(rest, b) -> Just (rest, a, b)
-    _ -> Nothing
+readPair text = do
+    (',':rest, a) <- readNum text
+    (rest, b) <- readNum rest
+    Just (rest, a, b)
 
 readMul :: String -> Maybe (String, Int, Int)
-readMul ('m':'u':'l':'(':rest) = readPair rest >>= \(rest, a, b) ->
-    case rest of
-        (')':rest) -> Just (rest, a, b)
-        _ -> Nothing
-readMul _ = Nothing
+readMul text = do
+    ('m':'u':'l':'(':rest) <- Just text
+    (')':rest, a, b) <- readPair rest
+    Just (rest, a, b)
 
 parse1 :: [(Int, Int)] -> String -> [(Int, Int)]
 parse1 acc "" = acc
