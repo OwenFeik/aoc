@@ -39,46 +39,14 @@ readInput fp = do
     text <- hGetContents handle
     return $ parseMachines $ lines text
 
-pressButton :: Pos -> Button -> Pos
-pressButton (x, y) (dx, dy) = (x + dx, y + dy)
-
-type Memo = Map Pos (Maybe Int)
-
-minCostFrom :: Memo -> Machine -> Pos -> (Memo, Maybe Int)
-minCostFrom memo (ba, bb, pz) at =
-    let ata = pressButton at ba
-        atb = pressButton at bb
-        memo' = minCostMemo memo (ba, bb, pz) ata
-        memo'' = minCostMemo memo' (ba, bb, pz) atb
-        a = memo'' ! ata
-        b = memo'' ! atb in case (a, b) of
-            (Just ca, Just cb) -> (memo'', Just (min (ca + 3) (cb + 1)))
-            (Just ca, Nothing) -> (memo'', Just (ca + 3))
-            (Nothing, Just cb) -> (memo'', Just (cb + 1))
-            (Nothing, Nothing) -> (memo'', Nothing)
-
-minCostMemo :: Memo -> Machine -> Pos -> Memo
-minCostMemo memo (ba, bb, pz) at
-    | at == pz = insert at (Just 0) memo
-    | (fst at) > (fst pz) || (snd at) > (snd pz) = insert at Nothing memo
-    | member at memo = memo
-    | otherwise = let (memo', cost) = minCostFrom memo (ba, bb, pz) at in
-        insert at cost memo'
-
-minCost :: Machine -> Maybe Int
-minCost machine = minCostMemo empty machine (0, 0) ! (0, 0)
-
-part1 :: [Machine] -> IO ()
-part1 machines = print . sum $ map (fromMaybe 0 . minCost) machines
-
 toDouble :: Int -> Double
 toDouble v = fromIntegral v
 
 isInteger :: Double -> Bool
 isInteger v = fromInteger (round v) == v
 
-minCost2 :: Machine -> Maybe Int
-minCost2 (ba, bb, pz) =
+minCost :: Machine -> Maybe Int
+minCost (ba, bb, pz) =
     let dxa = toDouble (fst ba)
         dya = toDouble (snd ba)
         dxb = toDouble (fst bb)
@@ -90,11 +58,14 @@ minCost2 (ba, bb, pz) =
             then Just (3 * (round a) + round b)
             else Nothing 
 
+part1 :: [Machine] -> IO ()
+part1 machines = print . sum $ map (fromMaybe 0 . minCost) machines
+
 adjust :: Int
 adjust = 10000000000000
 
 part2 :: [Machine] -> IO ()
-part2 machines = print . sum $ map (fromMaybe 0 . minCost2) $
+part2 machines = print . sum $ map (fromMaybe 0 . minCost) $
     map (\(ba, bb, (x, y)) -> (ba, bb, (x + adjust, y + adjust))) machines
 
 main = do
