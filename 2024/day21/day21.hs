@@ -27,7 +27,6 @@ directional = [
         ['<', 'v', '>']    
     ]
 
-
 onPad :: Pad -> Pos -> Maybe Pos
 onPad pad pos@(x, y) =
     if x >= 0 && y >= 0 && y < length pad && x < length (head pad)
@@ -38,19 +37,6 @@ button pos pad = do
     (x, y) <- onPad pad pos
     let c = pad !! y !! x
     if c == '!' then Nothing else Just c
-
-move :: Pad -> Pos -> State -> Maybe State
-move pad pos (ps, o) = onPad pad pos >>= Just . (,o) . (:ps)
-
-apply :: [Pad] -> State -> Char -> Maybe State
-apply (pad:_) ((x, y):ps, o) '^' = move pad (x, y - 1) (ps, o)
-apply (pad:_) ((x, y):ps, o) '<' = move pad (x - 1, y) (ps, o)
-apply (pad:_) ((x, y):ps, o) 'v' = move pad (x, y + 1) (ps, o)
-apply (pad:_) ((x, y):ps, o) '>' = move pad (x + 1, y) (ps, o)
-apply (pad:pads) (p:ps, o) 'A' = do
-    act <- button p pad
-    (ps', o') <- apply pads (ps, o) act
-    return (p:ps', o')
 
 posOf :: Pad -> Char -> Pos
 posOf pad b = head . map (\(y, mx) -> (fromMaybe 0 mx, y)) .
