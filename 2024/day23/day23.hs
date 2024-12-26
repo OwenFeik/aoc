@@ -65,53 +65,51 @@ part1 :: [Edge] -> IO ()
 part1 edges = print . countTs $ triplets edges
 
 type NSet = S.Set Node
-type Graph = M.Map Node NSet
+type Graph = M.Map Node NSet -- Adjacency list works well for Bron Kerbosch
 
 allNodes :: [Edge] -> [Node]
 allNodes edges = nub $ concat (map edgeNodes edges)
     where edgeNodes (u, v) = [u, v]
 
-nodeConnections :: [Edge] -> Graph
-nodeConnections edges =
+buildGraph :: [Edge] -> Graph
+buildGraph edges =
     M.fromList $ map (\n -> (n, nodeGraph n)) (allNodes edges) where
         partOf node (u, v) = node == u || node == v
         other node (u, v) = if node == u then v else u
         nodeGraph n = S.fromList . map (other n) . filter (partOf n) $ edges
 
-type BKState = (NSet, NSet, NSet, [NSet])
+bronKerbosch :: Graph -> NSet -> NSet -> NSet -> NSet
+bronKerbosch graph r p x
+    | null p && null x = r
+    | otherwise =
+        let state = (r, p, x, S.empty)
+            (_, _, _, clique) = foldl (bkRecurse graph) state (S.toList p)
+        in clique
 
-bronKerbosch :: Graph -> BKState -> BKState
-bronKerbosch graph state@(r, p, x, cliques)
-    | null p && null x = (r, p, x, r:cliques)
-    | otherwise = foldl (bkRecurse graph) state (S.toList p)
+type BKState = (NSet, NSet, NSet, NSet) -- r, p, x, biggest clique
 
 bkRecurse :: Graph -> BKState -> Node -> BKState
-bkRecurse graph (r, p, x, cliques) v =
+bkRecurse graph (r, p, x, clique) v =
     let neighbours = graph ! v
         r' = S.insert v r
         p' = S.intersection p neighbours
         x' = S.intersection x neighbours
-        (_, _, _, cliques') = bronKerbosch graph (r', p', x', cliques)
-    in (r, S.delete v p, S.insert v x, cliques')
+        opt = bronKerbosch graph r' p' x'
+        clique' = if S.size opt > S.size clique then opt else clique
+    in (r, S.delete v p, S.insert v x, clique')
 
-bkRun :: Graph -> [NSet]
+bkRun :: Graph -> NSet
 bkRun graph =
-    let state = (S.empty, S.fromList (M.keys graph), S.empty, [])
-        (r, p, x, cliques) = bronKerbosch graph state in cliques
-
-largest :: [S.Set a] -> S.Set a
-largest [s] = s
-largest (s:ss) = let largestSs = largest ss in
-    if S.size largestSs < S.size s then s else largestSs
+    let r = S.empty in let p = S.fromList (M.keys graph) in let x = S.empty in
+        bronKerbosch graph r p x
 
 lanPassword :: S.Set Node -> String
 lanPassword clust =
     intercalate "," $ map (\(a, b) -> (a:b:[])) $ S.toList clust
 
 part2 :: [Edge] -> IO ()
-part2 edges = putStrLn . lanPassword . largest . bkRun $ nodeConnections edges
+part2 edges = putStrLn . lanPassword . bkRun $ buildGraph edges
 
 main = do
     input <- readInput "input.txt"
-    part1 input
     part2 input
