@@ -64,49 +64,52 @@ countTs (((a, _), (b, _), (c, _)):ts) = let cnt = countTs ts in
 part1 :: [Edge] -> IO ()
 part1 edges = print . countTs $ triplets edges
 
-type Conns = M.Map Node (S.Set Node)
-
--- Map from set of node to largest cluster containing that set.
-type Memo = M.Map (S.Set Node) (S.Set Node)
+type NSet = S.Set Node
+type Graph = M.Map Node NSet
 
 allNodes :: [Edge] -> [Node]
 allNodes edges = nub $ concat (map edgeNodes edges)
     where edgeNodes (u, v) = [u, v]
 
-nodeConnections :: [Edge] -> Conns
+nodeConnections :: [Edge] -> Graph
 nodeConnections edges =
-    M.fromList $ map (\n -> (n, nodeConns n)) (allNodes edges) where
+    M.fromList $ map (\n -> (n, nodeGraph n)) (allNodes edges) where
         partOf node (u, v) = node == u || node == v
         other node (u, v) = if node == u then v else u
-        nodeConns n = S.fromList . map (other n) . filter (partOf n) $ edges
+        nodeGraph n = S.fromList . map (other n) . filter (partOf n) $ edges
+
+type BKState = (NSet, NSet, NSet, [NSet])
+
+bronKerbosch :: Graph -> BKState -> BKState
+bronKerbosch graph state@(r, p, x, cliques)
+    | null p && null x = (r, p, x, r:cliques)
+    | otherwise = foldl (bkRecurse graph) state (S.toList p)
+
+bkRecurse :: Graph -> BKState -> Node -> BKState
+bkRecurse graph (r, p, x, cliques) v =
+    let neighbours = graph ! v
+        r' = S.insert v r
+        p' = S.intersection p neighbours
+        x' = S.intersection x neighbours
+        (_, _, _, cliques') = bronKerbosch graph (r', p', x', cliques)
+    in (r, S.delete v p, S.insert v x, cliques')
+
+bkRun :: Graph -> [NSet]
+bkRun graph =
+    let state = (S.empty, S.fromList (M.keys graph), S.empty, [])
+        (r, p, x, cliques) = bronKerbosch graph state in cliques
 
 largest :: [S.Set a] -> S.Set a
 largest [s] = s
-largest (s:ss) = let largestRest = largest ss in
-    if S.size s > S.size largestRest then s else largestRest
-
-growCluster :: Conns -> Memo -> S.Set Node -> Memo
-growCluster conns memo clust = if M.member clust memo then memo else
-    let relevant = map (conns !) (S.toList clust)
-        common = S.difference (foldl1 S.intersection relevant) clust
-        opts = map (`S.insert` clust) $ S.toList common
-        memo' = foldl (growCluster conns) memo opts
-        clusts = map (memo' !) opts
-        clust' = if null clusts then clust else largest clusts
-        in M.insert clust clust' memo
-
-largestCluster :: Conns -> S.Set Node
-largestCluster conns =
-    let nodes = M.keys conns
-        memo = foldl (growCluster conns) M.empty (map S.singleton nodes)
-        in largest (M.elems memo)
+largest (s:ss) = let largestSs = largest ss in
+    if S.size largestSs < S.size s then s else largestSs
 
 lanPassword :: S.Set Node -> String
 lanPassword clust =
     intercalate "," $ map (\(a, b) -> (a:b:[])) $ S.toList clust
 
 part2 :: [Edge] -> IO ()
-part2 edges = putStrLn . lanPassword . largestCluster $ nodeConnections edges
+part2 edges = putStrLn . lanPassword . largest . bkRun $ nodeConnections edges
 
 main = do
     input <- readInput "input.txt"
