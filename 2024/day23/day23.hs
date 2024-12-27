@@ -112,4 +112,5 @@ part2 edges = putStrLn . lanPassword . bkRun $ buildGraph edges
 
 main = do
     input <- readInput "input.txt"
+    part1 input
     part2 input

@@ -1,0 +1,36 @@
+Adder
+
+z00 = x00 ^ y00
+z01 = (x00 & y00) ^ x01 ^ y01
+z02 = (x01 & y01) ^ x02 ^ y02
+
+v_i = x_i ^ y_i -- Value i
+
+b_i = x_i & y_i -- Both i
+
+k_i = v_i & c_(i - 1) -- Carry over i
+
+c_0 = x_0 & y_0 -- Carry 0
+c_i = b_i | k_i -- Carry i
+
+z_0 = v_0             -- Out 0
+z_i = c_(i - 1) ^ v_i -- Out i
+
+z00 = x00 ^ y00 -- v_0
+dsr = x00 & y00 -- c_0
+
+nmk = x01 ^ y01 -- v_1
+z01 = nmk ^ dsr -- z_1
+hqh = x01 & y01 -- b_1
+qrt = nmk & dsr -- k_1
+skd = hqh | qrt -- c_1
+
+ssq = x02 ^ y02 -- v_2
+z02 = skd ^ ssq -- z_2
+jmp = x02 & y02
+nqw = ssq & skd
+vnw = jmp | nqw -- c_2
+
+vng = x03 ^ y03
+z03 = vng ^ vnw
+fcg = vng & vnw
