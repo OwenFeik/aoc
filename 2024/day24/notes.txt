@@ -27,10 +27,17 @@ skd = hqh | qrt -- c_1
 
 ssq = x02 ^ y02 -- v_2
 z02 = skd ^ ssq -- z_2
-jmp = x02 & y02
-nqw = ssq & skd
+jmp = x02 & y02 -- b_2
+nqw = ssq & skd -- k_2
 vnw = jmp | nqw -- c_2
 
 vng = x03 ^ y03
 z03 = vng ^ vnw
 fcg = vng & vnw
+
+kqh = b_30
+ddn = v_30
+z_30 = c_29 ^ v_30 = fmn ^ ddn
+
+b_30 & fmn = dtk
+hnj | ddt = fmn
