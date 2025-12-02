@@ -1,4 +1,4 @@
-import Debug.Trace (trace)
+import Data.List
 
 type Range = (Int, Int)
 
@@ -31,10 +31,26 @@ invalidInRange (a, b) = filter idInvalid [a..b]
 part1 :: [Range] -> Int
 part1 ranges = sum . concat . map invalidInRange $ ranges
 
+isRepeated :: String -> Bool
+isRepeated s = isRepeatedForLength s 1
+
+isRepeatedForLength :: String -> Int -> Bool
+isRepeatedForLength s l
+    | l > length s `div` 2 = False
+    | otherwise =
+        let lWorks = length s `mod` l == 0 && isPrefixOf s (cycle (take l s))
+            in lWorks || isRepeatedForLength s (l + 1)
+
+repeatedInRange :: Range -> [Int]
+repeatedInRange (a, b) = filter (isRepeated . show) [a..b]
+
+part2 :: [Range] -> Int
+part2 ranges = sum . concat . map repeatedInRange $ ranges
 
 main :: IO ()
 main = do
     input <- readFile "input.txt"
     let ranges = parseInput input 
     putStrLn $ "Part 1: " ++ show (part1 ranges)
+    putStrLn $ "Part 2: " ++ show (part2 ranges)
 
