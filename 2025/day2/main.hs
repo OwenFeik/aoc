@@ -1,4 +1,9 @@
+{- cabal:
+build-depends: base, criterion
+-}
+
 import Data.List
+import Criterion.Main (bench, bgroup, defaultMain, whnf)
 
 type Range = (Int, Int)
 
@@ -49,8 +54,11 @@ part2 ranges = sum . concat . map repeatedInRange $ ranges
 
 main :: IO ()
 main = do
-    input <- readFile "input.txt"
-    let ranges = parseInput input 
+    ranges <- fmap parseInput $ readFile "input.txt"
     putStrLn $ "Part 1: " ++ show (part1 ranges)
     putStrLn $ "Part 2: " ++ show (part2 ranges)
-
+    defaultMain [ bgroup "day2"
+            [ bench "part1" $ whnf part1 ranges
+            , bench "part2" $ whnf part2 ranges
+            ]
+        ]

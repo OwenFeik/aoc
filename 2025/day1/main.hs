@@ -1,5 +1,9 @@
+{- cabal:
+build-depends: base, criterion
+-}
+
 import Prelude hiding (Left, Right)
-import Debug.Trace (trace)
+import Criterion.Main (bench, bgroup, defaultMain, whnf)
 
 data Direction = Left | Right deriving (Show, Eq)
 type Movement = (Direction, Int)
@@ -49,4 +53,9 @@ main = do
     let movements = parseInput $ lines input 
     putStrLn $ "Part 1: " ++ show (part1 movements)
     putStrLn $ "Part 2: " ++ show (part2 movements)
+    defaultMain [ bgroup "day1"
+            [ bench "part1" $ whnf part1 movements
+            , bench "part2" $ whnf part2 movements
+            ]
+        ]
 

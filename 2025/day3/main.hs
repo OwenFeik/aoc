@@ -1,3 +1,8 @@
+{- cabal:
+build-depends: base, criterion
+-}
+
+import Criterion.Main (bench, bgroup, defaultMain, whnf)
 import Data.Char (digitToInt)
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
@@ -34,8 +39,11 @@ part2 banks = sum $ map (bankJoltagePart2 0 12) banks
 
 main :: IO ()
 main = do
-    input <- readFile "input.txt"
-    let banks = parseInput (lines input)
-    putStrLn $ "Part 1: " ++ show (part1 banks)
-    putStrLn $ "Part 2: " ++ show (part2 banks)
-
+    input <- fmap (parseInput . lines) $ readFile "input.txt"
+    putStrLn $ "Part 1: " ++ show (part1 input)
+    putStrLn $ "Part 2: " ++ show (part2 input)
+    defaultMain [ bgroup "day3"
+            [ bench "part1" $ whnf part1 input
+            , bench "part2" $ whnf part2 input
+            ]
+        ]
