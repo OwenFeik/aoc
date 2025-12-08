@@ -4,18 +4,16 @@ import qualified Data.Set as S
 
 type Point = (Int, Int, Int)
 
-splitAcc :: Char -> String -> String -> [String]
-splitAcc _ [] word = [word]
-splitAcc sep (c:cs) word
-    | sep == c = (word:(splitAcc sep cs ""))
-    | otherwise = splitAcc sep cs (word ++ [c])
-
-splitOn :: Char -> String -> [String]
-splitOn sep text = splitAcc sep text ""
+splitOn :: String -> Char -> [String]
+splitOn text sep = let rest = dropWhile (/= sep) text in
+        if null rest
+        then [text]
+        else [take (length text - length rest) text]
+            ++ splitOn (drop 1 rest) sep
 
 parseInput :: [String] -> [Point]
 parseInput lines = 
-    let parsePoint line = let parts = splitOn ',' line
+    let parsePoint line = let parts = splitOn line ','
             in (read (head parts), read (parts !! 1), read (parts !! 2))
         in map parsePoint lines
 
