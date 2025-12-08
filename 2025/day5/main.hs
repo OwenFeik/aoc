@@ -1,3 +1,8 @@
+{- cabal:
+build-depends: base, criterion
+-}
+
+import Criterion.Main (bench, bgroup, defaultMain, whnf)
 import Data.List
 
 type Range = (Int, Int)
@@ -66,4 +71,9 @@ main = do
     (ranges, products) <- fmap parseInput $ readFile "input.txt"
     putStrLn $ "Part 1: " ++ show (part1 ranges products)
     putStrLn $ "Part 2: " ++ show (part2 ranges)
+    defaultMain [ bgroup "day5"
+            [ bench "part1" $ whnf (part1 ranges) products
+            , bench "part2" $ whnf part2 ranges
+            ]
+        ]
 

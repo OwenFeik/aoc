@@ -1,3 +1,8 @@
+{- cabal:
+build-depends: base, criterion
+-}
+
+import Criterion.Main (bench, bgroup, defaultMain, whnf)
 import Data.Char (isDigit, digitToInt)
 import Data.List (transpose, (!?))
 import Data.Maybe (mapMaybe)
@@ -53,4 +58,9 @@ main = do
     input <- readFile "input.txt"
     putStrLn $ "Part 1: " ++ show (part1 (parseInput (lines input)))
     putStrLn $ "Part 2: " ++ show (part2 (lines input))
+    defaultMain [ bgroup "day6"
+            [ bench "part1" $ whnf part1 (parseInput (lines input))
+            , bench "part2" $ whnf part2 (lines input)
+            ]
+        ]
 
