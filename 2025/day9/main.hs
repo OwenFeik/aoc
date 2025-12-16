@@ -1,3 +1,5 @@
+import qualified Data.Set as S
+
 type Coord = (Int, Int)
 type Rect = (Coord, Coord)
 
@@ -23,26 +25,32 @@ pairs (a:as) = [(a, b) | b <- as] ++ pairs as
 part1 :: [Coord] -> Int
 part1 coords = maximum . map rectArea . pairs $ coords
 
-{-
-rectContainsPoint :: Rect -> Coord -> Bool
-rectContainsPoint ((x1, y1), (x2, y2)) (x3, y3) = let
-    xi = min x1 x2
-    xa = max x1 x2
-    yi = min y1 y2
-    ya = max y1 y2 in x3 >= xi && x3 <= xa && y3 >= yi && y3 <= ya
+findPixels :: [Coord] -> S.Set Coord
+findPixels ((x1, y1):(x2, y2):cs) =
+    let linePoints = if x1 == x2 then [(x1, y) | y <- [min y1 y2..max y1 y2]]
+        else [(x, y1) | x <- [min x1 x2..max x1 x2]] in
+            S.fromList linePoints `S.union` findPixels ((x2, y2):cs)
+findPixels _ = S.empty
 
-greenAreas :: [Coord] -> Rect
-greenAreas (a:as) 
+limits :: [Coord] -> (Coord, Coord) -> (Coord, Coord)
+limits [] maxes = maxes
+limits ((x, y):cs) ((xmin, ymin), (xmax, ymax)) =
+    limits cs (((min x xmin), (min y ymin)), ((max x xmax), (max y ymax)))
 
-part2 :: [Coord] -> Int
-part2 coords =
-    maximum . map (uncurry rectArea) . filter (noPointInArea coords) . pairs $
-        coords
--}
+drawShape :: [Coord] -> [String]
+drawShape input =
+    let points = map (\(x, y) -> (x `div` 120, y `div` 240)) input
+        pixels = findPixels points
+        ((xmin, ymin), (xmax, ymax)) = limits points ((0, 0), (0, 0))
+        pixelAt x y = if (x, y) `S.member` pixels then '#' else ' '
+        makeLine y = [pixelAt x y | x <- [xmin..xmax]] in
+            map makeLine [ymin..ymax]
 
 main :: IO ()
 main = do
     input <- fmap (parseInput . lines) $ readFile "input.txt"
     putStrLn $ "Part 1: " ++ show (part1 input)
---   putStrLn $ "Part 2: " ++ show (part2 input)
+    let lines = part2 input
+    putStrLn "Part 2:"
+    mapM_ putStrLn lines
 
